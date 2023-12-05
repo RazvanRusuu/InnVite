@@ -1,11 +1,14 @@
-import express, { Express, Request, Response, Application } from "express";
-import morgan from "morgan";
+import express, { Application } from 'express'
+import morgan from 'morgan'
+import userRouter from './routes/userRoute'
 
-const app: Application = express();
-app.use(express.json());
+const app: Application = express()
+app.use(express.json())
 
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'))
 }
 
-export default app;
+app.use('/api/v1/user', userRouter)
+
+export default app
