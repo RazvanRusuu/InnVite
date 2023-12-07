@@ -12,6 +12,7 @@ export interface IUser {
   passwordChangedAt: Date
   passwordResetToken: string
   passwordResetExpires: string
+  correctPassword: (pass: string, dbpass: string) => boolean
 }
 
 const userSchema = new Schema<IUser>({
@@ -36,6 +37,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: [true, 'Please provide a password'],
     minLength: 8,
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -66,6 +68,13 @@ userSchema.pre('save', async function (next) {
 
   next()
 })
+
+userSchema.methods.correctPassword = async (
+  reqPassword: string,
+  dbPassword: string
+): Promise<boolean> => {
+  return await bcrypt.compare(reqPassword, dbPassword)
+}
 
 const userModel = model<IUser>('User', userSchema)
 
