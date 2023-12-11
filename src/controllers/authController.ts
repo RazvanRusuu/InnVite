@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
+import { signToken } from '../lib/signInToken'
+import jwt from 'jsonwebtoken'
+
 import User, { IUser } from '../models/User'
 import { ObjectId } from 'mongodb'
-import jwt from 'jsonwebtoken'
-import { signToken } from '../lib/signInToken'
 
 type IUserSignup = Pick<
   IUser,
@@ -65,5 +66,10 @@ const signIn = async (req: Request, res: Response, next: NextFunction) => {
     })
   }
 }
+
+// const protect = async (req: Request, res: Response, next: NextFunction) => {
+//   //   const token = req.jwt.verify
+//   next()
+// }
 
 export { signup, signIn }
