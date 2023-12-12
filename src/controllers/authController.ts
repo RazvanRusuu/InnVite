@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import { signToken } from '../lib/signInToken'
-import jwt from 'jsonwebtoken'
 
 import User, { IUser } from '../models/User'
 import { ObjectId } from 'mongodb'
+import catchAsync from '../utilis/catchAsync'
+import AppError from '../utilis/appError'
 
 type IUserSignup = Pick<
   IUser,
@@ -12,8 +13,8 @@ type IUserSignup = Pick<
   _id: ObjectId
 }
 
-const signup = async (req: Request, res: Response, next: NextFunction) => {
-  try {
+const signup = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { name, email, password, passwordConfirm } = req.body
     const newUser: IUserSignup = await User.create({
       name,
@@ -28,44 +29,34 @@ const signup = async (req: Request, res: Response, next: NextFunction) => {
       status: 'succes',
       token,
     })
-  } catch (error) {
-    res.status(400).json({
-      status: 'failed',
-      message: error,
-    })
   }
-}
+)
 
-const signIn = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
-  if (!email || !password) {
-    res.status(400).json({
-      status: 'failed',
-      message: 'Please provide email ond password',
-    })
-  }
+const signIn = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body
 
-  try {
-    const user = await User.findOne({ email }).select('+password')
-    if (!user || !(await user?.correctPassword(password, user.password))) {
-      return res.status(401).json({
+    if (!email || !password) {
+      res.status(400).json({
         status: 'failed',
-        message: 'Incorect password or email1',
+        message: 'Please provide email ond password',
       })
     }
+
+    const user = await User.findOne({ email }).select('+password')
+
+    if (!user || !(await user?.correctPassword(password, user.password))) {
+      return next(new AppError('Incorect password or email', 401))
+    }
+
     const token = signToken(user?._id)
 
     res.status(200).json({
       status: 'succes',
       token,
     })
-  } catch (error) {
-    res.status(400).json({
-      status: 'failed',
-      message: error,
-    })
   }
-}
+)
 
 // const protect = async (req: Request, res: Response, next: NextFunction) => {
 //   //   const token = req.jwt.verify
